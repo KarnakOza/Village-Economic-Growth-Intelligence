@@ -1,0 +1,12 @@
+"""
+India Village Economic Growth Pipeline
+-------------------------------------
+
+This pipeline combines:
+- VIIRS nighttime lights
+- Census village infrastructure
+- Antyodaya welfare indicators
+
+Goal:
+Identify villages showing strong economic and infrastructure growth.
+"""
