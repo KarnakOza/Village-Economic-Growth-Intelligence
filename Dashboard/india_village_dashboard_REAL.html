@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India Village Economic Growth Intelligence — Real Data</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0B0F1A;
+  --surface: #111827;
+  --surface2: #1C2333;
+  --border: #232D3F;
+  --accent: #00E5CC;
+  --amber: #FFB547;
+  --rose: #FF6B6B;
+  --blue: #4B9FFF;
+  --purple: #A78BFA;
+  --text: #C8D6EF;
+  --muted: #6B7B99;
+  --white: #EEF4FF;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* grid bg */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:48px 48px;opacity:.25;pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1}
+
+/* ── HEADER ── */
+.hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 28px;border-bottom:1px solid var(--border);
+  background:rgba(11,15,26,.85);backdrop-filter:blur(12px);
+  position:sticky;top:0;z-index:100;
+}
+.hdr-brand{display:flex;align-items:center;gap:12px}
+.hdr-icon{
+  width:36px;height:36px;border:1px solid var(--accent);border-radius:6px;
+  display:grid;grid-template-columns:repeat(3,1fr);gap:2px;padding:5px;
+}
+.hdr-icon span{background:var(--accent);border-radius:1px;opacity:.8}
+.hdr-icon span:nth-child(2){opacity:.4}
+.hdr-icon span:nth-child(5){background:var(--amber);opacity:1}
+.hdr-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:var(--white);letter-spacing:-.3px}
+.hdr-sub{font-size:11px;color:var(--muted);margin-top:1px}
+.hdr-badge{
+  display:flex;align-items:center;gap:7px;
+  background:rgba(0,229,204,.08);border:1px solid var(--accent);
+  border-radius:20px;padding:6px 14px;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:.5px;
+}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:blink 1.8s infinite}
+@keyframes blink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,204,.5)}50%{opacity:.5;box-shadow:0 0 0 4px rgba(0,229,204,0)}}
+
+/* ── KPI ROW ── */
+.kpi-row{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:1px;
+  background:var(--border);border-bottom:1px solid var(--border);
+}
+.kpi{background:var(--surface);padding:16px 20px}
+.kpi-l{font-size:10px;font-weight:500;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.kpi-v{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;line-height:1}
+.kpi-s{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* ── LAYOUT ── */
+.layout{display:grid;grid-template-columns:300px 1fr;min-height:calc(100vh - 110px)}
+
+/* ── SIDEBAR ── */
+.sidebar{background:#0D1120;border-right:1px solid var(--border);display:flex;flex-direction:column}
+.sb-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.sb-head span{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase}
+.sb-filter{padding:8px 10px;border-bottom:1px solid var(--border)}
+.sb-filter select{
+  width:100%;background:var(--surface);border:1px solid var(--border);
+  color:var(--text);padding:7px 10px;border-radius:6px;
+  font-family:'DM Sans',sans-serif;font-size:12px;outline:none;
+}
+.vlist{flex:1;overflow-y:auto;padding:4px 0}
+.vlist::-webkit-scrollbar{width:3px}
+.vlist::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.vi{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;
+  cursor:pointer;transition:background .12s;border-left:3px solid transparent;
+}
+.vi:hover{background:var(--surface)}
+.vi.active{background:var(--surface2);border-left-color:var(--accent)}
+.vi-rank{
+  width:28px;height:28px;border-radius:5px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:11px;font-weight:500;
+}
+.rg{background:rgba(255,181,71,.12);color:var(--amber);border:1px solid var(--amber)}
+.rs{background:rgba(0,229,204,.1);color:var(--accent);border:1px solid var(--accent)}
+.rn{background:var(--surface);color:var(--muted);border:1px solid var(--border)}
+.vi-info{flex:1;min-width:0}
+.vi-name{font-size:12px;font-weight:600;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vi-state{font-size:10px;color:var(--muted);margin-top:1px}
+.vi-sc{font-family:'DM Mono',monospace;font-size:13px;font-weight:500}
+
+/* ── CONTENT ── */
+.content{padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:16px}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.card-t{font-size:10px;font-weight:600;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:14px}
+
+/* ── DETAIL ── */
+.det-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:6px}
+.det-label{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:var(--white);line-height:1.2;max-width:420px}
+.det-score-box{text-align:right;flex-shrink:0}
+.det-score{font-family:'DM Mono',monospace;font-size:44px;font-weight:500;color:var(--accent);line-height:1}
+.det-score-sub{font-size:10px;color:var(--muted);margin-top:3px;letter-spacing:.5px}
+.det-state{font-size:12px;color:var(--muted);margin-bottom:14px}
+
+/* score bars */
+.bars{display:flex;flex-direction:column;gap:9px}
+.bar-row{display:flex;align-items:center;gap:10px}
+.bar-lbl{width:120px;font-size:11px;color:var(--text);flex-shrink:0}
+.bar-wt{width:28px;font-size:10px;color:var(--muted);text-align:right;flex-shrink:0}
+.bar-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.bar-fill{height:100%;border-radius:3px;transition:width .6s cubic-bezier(.4,0,.2,1)}
+.bar-val{width:34px;font-size:11px;font-family:'DM Mono',monospace;text-align:right;flex-shrink:0}
+
+/* ind grid */
+.ind-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.ind{background:#0D1120;border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.ind-l{font-size:10px;color:var(--muted);margin-bottom:4px}
+.ind-v{font-family:'DM Mono',monospace;font-size:18px;font-weight:500}
+.ind-d{font-size:10px;margin-top:2px}
+.pos{color:var(--accent)} .neg{color:var(--rose)}
+
+/* charts */
+.charts-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-h{height:210px;position:relative}
+
+/* insight box */
+.insight{
+  background:rgba(0,229,204,.05);border:1px solid rgba(0,229,204,.2);
+  border-radius:8px;padding:12px 16px;
+  font-size:12px;line-height:1.7;color:var(--text);
+  font-style:italic;
+}
+.insight strong{color:var(--accent);font-style:normal}
+
+/* map */
+.map-svg{width:100%;border-radius:8px;background:#0D1120;min-height:260px}
+.map-dot{cursor:pointer;transition:r .2s}
+.map-dot:hover{r:8!important}
+
+/* tooltip */
+.tt{
+  position:fixed;background:#0D1120;border:1px solid var(--accent);
+  border-radius:8px;padding:10px 14px;font-size:12px;
+  pointer-events:none;opacity:0;transition:opacity .15s;z-index:999;
+  max-width:220px;
+}
+.tt.show{opacity:1}
+.tt-name{font-weight:700;color:var(--white);font-size:13px;margin-bottom:5px}
+.tt-row{color:var(--muted);margin-top:2px}
+.tt-row span{color:var(--text)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header class="hdr">
+  <div class="hdr-brand">
+    <div class="hdr-icon">
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+      <span></span><span></span><span></span>
+    </div>
+    <div>
+      <div class="hdr-title">India Village Economic Growth Intelligence</div>
+      <div class="hdr-sub">SHRUG VIIRS · Census 2011 · Antyodaya 2020 · GEE Validation · 588,760 villages scored</div>
+    </div>
+  </div>
+  <div class="hdr-badge"><span class="pulse"></span>REAL DATA</div>
+</header>
+
+<div class="kpi-row">
+  <div class="kpi"><div class="kpi-l">Villages Scored</div><div class="kpi-v" style="color:var(--white)">588,760</div><div class="kpi-s">19 states · SHRUG 2023</div></div>
+  <div class="kpi"><div class="kpi-l">Top Score</div><div class="kpi-v" style="color:var(--amber)">91.5</div><div class="kpi-s">Haryana · D-75</div></div>
+  <div class="kpi"><div class="kpi-l">Leads Top 100</div><div class="kpi-v" style="color:var(--accent)">Kerala</div><div class="kpi-s">37 of 100 villages</div></div>
+  <div class="kpi"><div class="kpi-l">Avg NTL Growth</div><div class="kpi-v" style="color:var(--blue)">0.61</div><div class="kpi-s">Log ratio 2019→2023</div></div>
+  <div class="kpi"><div class="kpi-l">Data Window</div><div class="kpi-v" style="color:var(--purple)">4yr</div><div class="kpi-s">2019 → 2023</div></div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sb-head"><span>Top 100 Villages</span></div>
+    <div class="sb-filter">
+      <select id="stFilter" onchange="filterVillages()">
+        <option value="">All States</option>
+      </select>
+    </div>
+    <div class="vlist" id="vlist"></div>
+  </aside>
+
+  <div class="content">
+
+    <!-- Detail card -->
+    <div class="card">
+      <div class="det-top">
+        <div>
+          <div class="det-label" id="dLabel">Loading...</div>
+          <div class="det-state" id="dState"></div>
+        </div>
+        <div class="det-score-box">
+          <div class="det-score" id="dScore">—</div>
+          <div class="det-score-sub">GROWTH SCORE / 100</div>
+        </div>
+      </div>
+
+      <div class="card-t">Score Breakdown</div>
+      <div class="bars">
+        <div class="bar-row">
+          <div class="bar-lbl">NTL Growth</div><div class="bar-wt">40%</div>
+          <div class="bar-track"><div class="bar-fill" id="bN" style="background:var(--accent)"></div></div>
+          <div class="bar-val" style="color:var(--accent)" id="vN"></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Infrastructure</div><div class="bar-wt">25%</div>
+          <div class="bar-track"><div class="bar-fill" id="bI" style="background:var(--blue)"></div></div>
+          <div class="bar-val" style="color:var(--blue)" id="vI"></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Housing</div><div class="bar-wt">20%</div>
+          <div class="bar-track"><div class="bar-fill" id="bH" style="background:var(--purple)"></div></div>
+          <div class="bar-val" style="color:var(--purple)" id="vH"></div>
+        </div>
+        <div class="bar-row">
+          <div class="bar-lbl">Market Access</div><div class="bar-wt">15%</div>
+          <div class="bar-track"><div class="bar-fill" id="bM" style="background:var(--amber)"></div></div>
+          <div class="bar-val" style="color:var(--amber)" id="vM"></div>
+        </div>
+      </div>
+
+      <div class="ind-grid">
+        <div class="ind"><div class="ind-l">NTL 2019</div><div class="ind-v" style="color:var(--muted)" id="iN19"></div><div class="ind-d" style="color:var(--muted)">Baseline brightness</div></div>
+        <div class="ind"><div class="ind-l">NTL 2023</div><div class="ind-v" style="color:var(--accent)" id="iN23"></div><div class="ind-d pos">VIIRS mean DN</div></div>
+        <div class="ind"><div class="ind-l">NTL Growth</div><div class="ind-v pos" id="iNG"></div><div class="ind-d pos">Log ratio</div></div>
+        <div class="ind"><div class="ind-l">Population</div><div class="ind-v" style="color:var(--white)" id="iPop"></div><div class="ind-d" style="color:var(--muted)">Census 2011</div></div>
+        <div class="ind"><div class="ind-l">PMAY Density</div><div class="ind-v" style="color:var(--purple)" id="iPmay"></div><div class="ind-d" style="color:var(--muted)">% households</div></div>
+        <div class="ind"><div class="ind-l">National Rank</div><div class="ind-v" style="color:var(--amber)" id="iRank"></div><div class="ind-d" style="color:var(--muted)">of 588,760</div></div>
+      </div>
+    </div>
+
+    <!-- Your insight -->
+    <div class="insight">
+      <strong>Your key findings:</strong> Villages surrounding expressways and highways show strongest NTL growth — mobility drives economic activity. 
+      Higher PMAY housing density correlates with NTL growth, suggesting rising household income enables construction investment. 
+      Kerala dominates (37/100) reflecting high baseline infrastructure + sustained light growth. Haryana's rank #1 village is consistent with NCR peri-urban expansion corridor.
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-2">
+      <div class="card">
+        <div class="card-t">Top 100 by State</div>
+        <div class="chart-h"><canvas id="stChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">NTL Growth Distribution — All Top 100</div>
+        <div class="chart-h"><canvas id="ntlChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="charts-2">
+      <div class="card">
+        <div class="card-t">Score Components — Top 20</div>
+        <div class="chart-h"><canvas id="stackChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-t">PMAY Density vs Economic Score</div>
+        <div class="chart-h"><canvas id="scatChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Map -->
+    <div class="card">
+      <div class="card-t">Geographic Distribution — Top 100 Villages (Approximate State Centroids)</div>
+      <svg id="gmap" viewBox="60 8 30 30" class="map-svg">
+        <path d="M68 10 L75 9 L79 10 L83 11 L87 12 L88 15 L87 18 L88 22 L87 26 L84 28 L82 32 L78 36 L75 37 L73 35 L70 33 L68 30 L66 28 L65 25 L64 22 L65 18 L66 14 Z" fill="#1C2333" stroke="#232D3F" stroke-width="0.3"/>
+        <g id="mdots"></g>
+      </svg>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<div class="tt" id="tt">
+  <div class="tt-name" id="ttn"></div>
+  <div class="tt-row">State: <span id="tts"></span></div>
+  <div class="tt-row">Score: <span id="ttsc"></span></div>
+  <div class="tt-row">NTL Growth: <span id="ttg"></span></div>
+</div>
+
+<script>
+const DATA = [{"rank": 1, "label": "Haryana / D-75 / V-059543", "state": "Haryana", "score": 91.45732977409531, "score_ntl": 98.92110221431332, "score_infra": 84.99999999915, "score_housing": 98.44444444346, "score_market": 72.99999999926999, "ntl_2019": 3.4981370044179423, "ntl_2023": 7.406491714079628, "ntl_growth": 0.6253409184431926, "population": 9390.0, "pmay_density": 98.0, "lat": 29.4771, "lon": 74.6606}, {"rank": 2, "label": "Andhra Pradesh / D-541 / V-579639", "state": "Andhra Pradesh", "score": 89.31185969235105, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 57.80929865978439, "score_market": 84.99999999915, "ntl_2019": 0.7898484753616973, "ntl_2023": 3.59523801928601, "ntl_growth": 0.6363421259798077, "population": 4014.0, "pmay_density": 33.09692671394799, "lat": 15.238, "lon": 78.9096}, {"rank": 3, "label": "Andhra Pradesh / D-543 / V-583178", "state": "Andhra Pradesh", "score": 89.24985669380352, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 61.24928366700928, "score_market": 79.9999999992, "ntl_2019": 0.9066591644590416, "ntl_2023": 2.99960933110261, "ntl_growth": 0.6363421259798077, "population": 5683.0, "pmay_density": 37.02005730659026, "lat": 16.6223, "lon": 80.2701}, {"rank": 4, "label": "Assam / D-313 / V-294267", "state": "Assam", "score": 88.52575763803087, "score_ntl": 96.1301835700132, "score_infra": 99.999999999, "score_housing": 65.3684210519779, "score_market": 79.9999999992, "ntl_2019": 2.1441653156192086, "ntl_2023": 4.711211558764973, "ntl_growth": 0.5968827285923981, "population": 1501.0, "pmay_density": 57.89473684210527, "lat": 27.3771, "lon": 91.6984}, {"rank": 5, "label": "Maharashtra / D-515 / V-548837", "state": "Maharashtra", "score": 88.3362217973767, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 41.68110918502513, "score_market": 99.999999999, "ntl_2019": 2.4864948602108914, "ntl_2023": 6.611535848084027, "ntl_growth": 0.6363421259798077, "population": 5934.0, "pmay_density": 3.032928942807626, "lat": 19.5173, "lon": 74.3033}, {"rank": 6, "label": "Kerala / D-597 / V-628159", "state": "Kerala", "score": 88.00705131767789, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.03525678653113, "score_market": 99.999999999, "ntl_2019": 0.2275903592670229, "ntl_2023": 1.3234902085911626, "ntl_growth": 0.6363421259798077, "population": 28718.0, "pmay_density": 0.0587613115524738, "lat": 10.0064, "lon": 76.2872}, {"rank": 7, "label": "Kerala / D-599 / V-628328", "state": "Kerala", "score": 88.00321754978084, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.01608794704588, "score_market": 99.999999999, "ntl_2019": 0.3726587340831193, "ntl_2023": 1.7766283463396622, "ntl_growth": 0.6363421259798077, "population": 19124.0, "pmay_density": 0.1072529829735889, "lat": 9.4301, "lon": 75.3676}, {"rank": 8, "label": "Assam / D-321 / V-303394", "state": "Assam", "score": 87.99999996029167, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.9999999996, "score_market": 99.999999999, "ntl_2019": 3.837848410480504, "ntl_2023": 8.50696293187971, "ntl_growth": 0.6363421259798077, "population": 3568.0, "pmay_density": 0.0, "lat": 26.6503, "lon": 93.0724}, {"rank": 9, "label": "Kerala / D-595 / V-627955", "state": "Kerala", "score": 87.99999996029167, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.9999999996, "score_market": 99.999999999, "ntl_2019": 3.9432564253704254, "ntl_2023": 10.206934080436428, "ntl_growth": 0.6363421259798077, "population": 25327.0, "pmay_density": 0.0, "lat": 10.0118, "lon": 76.5389}, {"rank": 10, "label": "Kerala / D-592 / V-627513", "state": "Kerala", "score": 87.96813760566398, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.84068822646156, "score_market": 99.999999999, "ntl_2019": 0.263569189949399, "ntl_2023": 1.3927690429069095, "ntl_growth": 0.6363421259798077, "population": 34016.0, "pmay_density": 0.0, "lat": 11.7788, "lon": 74.7906}, {"rank": 11, "label": "Kerala / D-593 / V-627691", "state": "Kerala", "score": 87.6682242593604, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 38.341121494943685, "score_market": 99.999999999, "ntl_2019": 0.3370449653020168, "ntl_2023": 1.6719516956302478, "ntl_growth": 0.6363421259798077, "population": 14429.0, "pmay_density": 0.4088785046728971, "lat": 11.768, "lon": 76.8655}, {"rank": 12, "label": "Andhra Pradesh / D-547 / V-589401", "state": "Andhra Pradesh", "score": 87.62539017881778, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 38.12695109223059, "score_market": 99.999999999, "ntl_2019": 2.385946736711672, "ntl_2023": 6.687827108710688, "ntl_growth": 0.6363421259798077, "population": 6867.0, "pmay_density": 0.2081165452653486, "lat": 15.4337, "lon": 78.7064}, {"rank": 13, "label": "Odisha / D-372 / V-381681", "state": "Odisha", "score": 87.55677286866262, "score_ntl": 99.99999990192914, "score_infra": 74.99999999925, "score_housing": 76.53386454106732, "score_market": 89.9999999991, "ntl_2019": 11.342619991908355, "ntl_2023": 24.2172698272, "ntl_growth": 0.6363421259798077, "population": 2200.0, "pmay_density": 67.52988047808765, "lat": 22.3233, "lon": 84.6083}, {"rank": 14, "label": "Assam / D-311 / V-292790", "state": "Assam", "score": 87.553587205646, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 37.76793622637165, "score_market": 99.999999999, "ntl_2019": 0.4385524851477796, "ntl_2023": 2.8376550979795394, "ntl_growth": 0.6363421259798077, "population": 5223.0, "pmay_density": 0.70859167404783, "lat": 24.9788, "lon": 91.7277}, {"rank": 15, "label": "Maharashtra / D-526 / V-562179", "state": "Maharashtra", "score": 87.49671136197199, "score_ntl": 97.34712775112206, "score_infra": 79.9999999992, "score_housing": 79.03930130925328, "score_market": 84.99999999915, "ntl_2019": 4.893752407800911, "ntl_2023": 9.839365187012328, "ntl_growth": 0.6092915562787746, "population": 3905.0, "pmay_density": 71.61572052401746, "lat": 20.794, "lon": 76.0251}, {"rank": 16, "label": "Kerala / D-593 / V-627670", "state": "Kerala", "score": 87.3450289195047, "score_ntl": 98.44640681791242, "score_infra": 99.999999999, "score_housing": 39.83233096369863, "score_market": 99.999999999, "ntl_2019": 0.2855928201062618, "ntl_2023": 1.3910211578913176, "ntl_growth": 0.6205005868413865, "population": 23581.0, "pmay_density": 0.0, "lat": 11.7719, "lon": 76.9603}, {"rank": 17, "label": "Rajasthan / D-110 / V-080091", "state": "Rajasthan", "score": 87.29999996029866, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 42.749999999572495, "score_market": 99.999999999, "ntl_2019": 3.537539014077768, "ntl_2023": 7.93379387007369, "ntl_growth": 0.6363421259798077, "population": 4301.0, "pmay_density": 6.25, "lat": 27.1325, "lon": 75.6372}, {"rank": 18, "label": "Maharashtra / D-531 / V-568705", "state": "Maharashtra", "score": 87.00709215888315, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 35.03546099255745, "score_market": 99.999999999, "ntl_2019": 2.1108924362404395, "ntl_2023": 4.977406166296669, "ntl_growth": 0.6363421259798077, "population": 5424.0, "pmay_density": 0.7092198581560284, "lat": 19.3871, "lon": 75.87}, {"rank": 19, "label": "Andhra Pradesh / D-538 / V-575757", "state": "Andhra Pradesh", "score": 86.91627363291916, "score_ntl": 98.94346186125917, "score_infra": 79.9999999992, "score_housing": 80.44444444363998, "score_market": 74.99999999925, "ntl_2019": 0.9324321944292028, "ntl_2023": 2.6123131437470235, "ntl_growth": 0.6255689132932327, "population": 1816.0, "pmay_density": 73.33333333333333, "lat": 16.9011, "lon": 80.0956}, {"rank": 20, "label": "Odisha / D-376 / V-389472", "state": "Odisha", "score": 86.78979794197154, "score_ntl": 94.32223921705764, "score_infra": 89.9999999991, "score_housing": 57.80451127761744, "score_market": 99.999999999, "ntl_2019": 1.7627417980089706, "ntl_2023": 3.926709075669068, "ntl_growth": 0.5784476431623164, "population": 2738.0, "pmay_density": 37.89473684210527, "lat": 22.0368, "lon": 85.3306}, {"rank": 21, "label": "Kerala / D-593 / V-627706", "state": "Kerala", "score": 86.75984409484057, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 40.04922067228204, "score_market": 99.999999999, "ntl_2019": 1.3515329040758557, "ntl_2023": 3.583956001371865, "ntl_growth": 0.6363421259798077, "population": 20973.0, "pmay_density": 0.2461033634126333, "lat": 11.4642, "lon": 74.9086}, {"rank": 22, "label": "Kerala / D-597 / V-628180", "state": "Kerala", "score": 86.75973824393158, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 40.04869141773707, "score_market": 99.999999999, "ntl_2019": 0.3748654052061838, "ntl_2023": 1.602583718000372, "ntl_growth": 0.6363421259798077, "population": 19589.0, "pmay_density": 0.0811523635625887, "lat": 10.0342, "lon": 75.6393}, {"rank": 23, "label": "Rajasthan / D-127 / V-102078", "state": "Rajasthan", "score": 86.51015264940823, "score_ntl": 98.08890621486634, "score_infra": 94.99999999905, "score_housing": 42.6229508192459, "score_market": 99.999999999, "ntl_2019": 2.298973376314373, "ntl_2023": 5.113299101581926, "ntl_growth": 0.6168552566365681, "population": 4472.0, "pmay_density": 5.245901639344262, "lat": 25.7632, "lon": 73.4163}, {"rank": 24, "label": "Kerala / D-600 / V-628421", "state": "Kerala", "score": 85.93501712698571, "score_ntl": 94.8389253708556, "score_infra": 99.999999999, "score_housing": 39.99723489521733, "score_market": 99.999999999, "ntl_2019": 0.3548407368464253, "ntl_2023": 1.4288066650949036, "ntl_growth": 0.5837161423670814, "population": 28864.0, "pmay_density": 0.0138255219134522, "lat": 9.6535, "lon": 75.605}, {"rank": 25, "label": "Rajasthan / D-119 / V-092188", "state": "Rajasthan", "score": 85.90466662697928, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.7733333329256, "score_market": 84.99999999915, "ntl_2019": 1.2365332539354994, "ntl_2023": 3.6994020216629018, "ntl_growth": 0.6363421259798077, "population": 7610.0, "pmay_density": 3.0666666666666664, "lat": 27.4309, "lon": 73.8124}, {"rank": 26, "label": "Bihar / D-236 / V-255300", "state": "Bihar", "score": 85.78096770224934, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.15483870927587, "score_market": 84.99999999915, "ntl_2019": 11.557997408145924, "ntl_2023": 23.306741128030872, "ntl_growth": 0.6363421259798077, "population": 6759.0, "pmay_density": 0.7741935483870968, "lat": 24.7066, "lon": 84.4416}, {"rank": 27, "label": "Maharashtra / D-521 / V-556314", "state": "Maharashtra", "score": 85.77638585605058, "score_ntl": 93.81596464133273, "score_infra": 99.999999999, "score_housing": 52.499999999475, "score_market": 84.99999999915, "ntl_2019": 6.156375251530969, "ntl_2023": 11.696024472593296, "ntl_growth": 0.5732853078065243, "population": 19239.0, "pmay_density": 37.5, "lat": 19.0524, "lon": 77.0239}, {"rank": 28, "label": "Andhra Pradesh / D-541 / V-579683", "state": "Andhra Pradesh", "score": 85.68571424602908, "score_ntl": 99.99999990192914, "score_infra": 89.9999999991, "score_housing": 59.678571427974646, "score_market": 74.99999999925, "ntl_2019": 1.2557631836994776, "ntl_2023": 3.36969651319981, "ntl_growth": 0.6363421259798077, "population": 3825.0, "pmay_density": 32.857142857142854, "lat": 16.357, "lon": 80.0674}, {"rank": 29, "label": "Rajasthan / D-130 / V-106740", "state": "Rajasthan", "score": 85.65894815497755, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 49.54474097281695, "score_market": 79.9999999992, "ntl_2019": 2.532231562200875, "ntl_2023": 6.341704661061937, "ntl_growth": 0.6363421259798077, "population": 2998.0, "pmay_density": 19.78021978021978, "lat": 26.0372, "lon": 74.9053}, {"rank": 30, "label": "Andhra Pradesh / D-538 / V-575756", "state": "Andhra Pradesh", "score": 85.61213677172654, "score_ntl": 80.784012403732, "score_infra": 99.999999999, "score_housing": 66.49265905316868, "score_market": 99.999999999, "ntl_2019": 1.5171417604645236, "ntl_2023": 2.9099566909940107, "ntl_growth": 0.440402261694972, "population": 7329.0, "pmay_density": 45.02446982055465, "lat": 14.9031, "lon": 79.3784}, {"rank": 31, "label": "Maharashtra / D-505 / V-536076", "state": "Maharashtra", "score": 85.56977131203082, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.09885675818332, "score_market": 84.99999999915, "ntl_2019": 2.359363558289276, "ntl_2023": 11.199840119488108, "ntl_growth": 0.6363421259798077, "population": 5250.0, "pmay_density": 1.546738399462004, "lat": 21.2201, "lon": 76.1339}, {"rank": 32, "label": "Maharashtra / D-522 / V-557526", "state": "Maharashtra", "score": 85.55621114044033, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.03105590023081, "score_market": 84.99999999915, "ntl_2019": 1.706898099527422, "ntl_2023": 4.874326575026132, "ntl_growth": 0.6363421259798077, "population": 10932.0, "pmay_density": 6.666666666666667, "lat": 19.9223, "lon": 76.2677}, {"rank": 33, "label": "Maharashtra / D-526 / V-562565", "state": "Maharashtra", "score": 85.50764083901764, "score_ntl": 99.99999990192914, "score_infra": 89.9999999991, "score_housing": 40.03820439310487, "score_market": 99.999999999, "ntl_2019": 1.4073495541080492, "ntl_2023": 3.88380304863541, "ntl_growth": 0.6363421259798077, "population": 4785.0, "pmay_density": 0.1910219675262655, "lat": 20.7801, "lon": 76.5419}, {"rank": 34, "label": "Odisha / D-380 / V-397397", "state": "Odisha", "score": 85.46666662698367, "score_ntl": 99.99999990192914, "score_infra": 89.9999999991, "score_housing": 39.833333332935, "score_market": 99.999999999, "ntl_2019": 0.0, "ntl_2023": 0.9172262211182914, "ntl_growth": 0.6363421259798077, "population": 440.0, "pmay_density": 7.5, "lat": 20.1388, "lon": 83.6948}, {"rank": 35, "label": "Kerala / D-592 / V-627505", "state": "Kerala", "score": 85.46409572910083, "score_ntl": 96.80024870478368, "score_infra": 94.99999999905, "score_housing": 39.969981237874215, "score_market": 99.999999999, "ntl_2019": 0.032311374744033, "ntl_2023": 0.8879952090668584, "ntl_growth": 0.6037151888852272, "population": 26456.0, "pmay_density": 0.0, "lat": 10.2969, "lon": 75.5743}, {"rank": 36, "label": "Bihar / D-235 / V-253043", "state": "Bihar", "score": 85.4387764925353, "score_ntl": 98.18027456582575, "score_infra": 79.9999999992, "score_housing": 63.33333333269998, "score_market": 89.9999999991, "ntl_2019": 5.9069358518192, "ntl_2023": 11.81111323753258, "ntl_growth": 0.617786913273449, "population": 1195.0, "pmay_density": 66.66666666666666, "lat": 24.229, "lon": 86.6418}, {"rank": 37, "label": "Maharashtra / D-506 / V-536949", "state": "Maharashtra", "score": 85.34470145701222, "score_ntl": 99.49756114774748, "score_infra": 89.9999999991, "score_housing": 40.22838499144111, "score_market": 99.999999999, "ntl_2019": 1.834932108565628, "ntl_2023": 4.329390573358613, "ntl_growth": 0.6312189033863793, "population": 5044.0, "pmay_density": 0.3806416530723219, "lat": 20.8806, "lon": 75.1579}, {"rank": 38, "label": "Tamil Nadu / D-612 / V-635145", "state": "Tamil Nadu", "score": 85.34301408904665, "score_ntl": 99.99999990192914, "score_infra": 89.9999999991, "score_housing": 39.21507064324991, "score_market": 99.999999999, "ntl_2019": 0.4250565943982556, "ntl_2023": 1.9334609672366727, "ntl_growth": 0.6363421259798077, "population": 5746.0, "pmay_density": 0.1569858712715855, "lat": 11.5934, "lon": 78.3438}, {"rank": 39, "label": "Kerala / D-600 / V-628375", "state": "Kerala", "score": 85.30337957009077, "score_ntl": 93.47802062607232, "score_infra": 99.999999999, "score_housing": 39.5608566003092, "score_market": 99.999999999, "ntl_2019": 0.7428945403205982, "ntl_2023": 2.081408046524917, "ntl_growth": 0.5698393904685676, "population": 28471.0, "pmay_density": 0.0271076172404445, "lat": 12.0941, "lon": 76.1477}, {"rank": 40, "label": "Andhra Pradesh / D-542 / V-581707", "state": "Andhra Pradesh", "score": 85.30108508393326, "score_ntl": 99.43984288848606, "score_infra": 94.99999999905, "score_housing": 48.875739644481655, "score_market": 79.9999999992, "ntl_2019": 3.028762395602068, "ntl_2023": 6.5692167762335325, "ntl_growth": 0.6306303669977342, "population": 4660.0, "pmay_density": 62.8698224852071, "lat": 15.2075, "lon": 78.9799}, {"rank": 41, "label": "Rajasthan / D-130 / V-107754", "state": "Rajasthan", "score": 85.28080564752264, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 82.65402843519242, "score_market": 49.9999999995, "ntl_2019": 1.6094636251247358, "ntl_2023": 4.528723345403748, "ntl_growth": 0.6363421259798077, "population": 2169.0, "pmay_density": 78.19905213270142, "lat": 27.2079, "lon": 73.5061}, {"rank": 42, "label": "Maharashtra / D-531 / V-568704", "state": "Maharashtra", "score": 85.27542368913247, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 37.62711864369152, "score_market": 84.99999999915, "ntl_2019": 2.107462978407085, "ntl_2023": 7.490859898816733, "ntl_growth": 0.6363421259798077, "population": 5255.0, "pmay_density": 1.694915254237288, "lat": 20.0053, "lon": 76.9074}, {"rank": 43, "label": "Kerala / D-593 / V-627582", "state": "Kerala", "score": 85.2752457330283, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 43.12622886311573, "score_market": 85.99999999914, "ntl_2019": 0.0574605243419421, "ntl_2023": 1.2462100589172471, "ntl_growth": 0.6363421259798077, "population": 24445.0, "pmay_density": 5.210381439244986, "lat": 10.5487, "lon": 75.4291}, {"rank": 44, "label": "Odisha / D-380 / V-397514", "state": "Odisha", "score": 85.25517237411222, "score_ntl": 99.99999990192914, "score_infra": 89.9999999991, "score_housing": 73.27586206823277, "score_market": 53.99999999946, "ntl_2019": 0.0, "ntl_2023": 1.0603367164614923, "ntl_growth": 0.6363421259798077, "population": 456.0, "pmay_density": 59.48275862068966, "lat": 22.4443, "lon": 85.1271}, {"rank": 45, "label": "Kerala / D-594 / V-627717", "state": "Kerala", "score": 85.24413485767992, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 39.97067448640381, "score_market": 89.9999999991, "ntl_2019": 0.0046767010843473, "ntl_2023": 0.8996268718682112, "ntl_growth": 0.6363421259798077, "population": 3013.0, "pmay_density": 0.1466275659824047, "lat": 9.6232, "lon": 74.9124}, {"rank": 46, "label": "Kerala / D-592 / V-627493", "state": "Kerala", "score": 85.11155992993623, "score_ntl": 92.63648022420436, "score_infra": 99.999999999, "score_housing": 40.2848392032725, "score_market": 99.999999999, "ntl_2019": 0.0963810331208504, "ntl_2023": 0.9218211124285604, "ntl_growth": 0.5612584464943022, "population": 32748.0, "pmay_density": 0.5666156202143952, "lat": 9.6794, "lon": 76.6534}, {"rank": 47, "label": "Andhra Pradesh / D-540 / V-578213", "state": "Andhra Pradesh", "score": 85.03887464062818, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.19437340113258, "score_market": 79.9999999992, "ntl_2019": 1.084492339939093, "ntl_2023": 3.772615051285616, "ntl_growth": 0.6363421259798077, "population": 5093.0, "pmay_density": 1.687979539641944, "lat": 16.7891, "lon": 79.5065}, {"rank": 48, "label": "Uttar Pradesh / D-139 / V-119466", "state": "Uttar Pradesh", "score": 85.01351347383505, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 40.06756756716689, "score_market": 79.9999999992, "ntl_2019": 2.600903450234055, "ntl_2023": 6.65222974763095, "ntl_growth": 0.6363421259798077, "population": 5208.0, "pmay_density": 0.1126126126126126, "lat": 25.5373, "lon": 80.5911}, {"rank": 49, "label": "Gujarat / D-476 / V-512944", "state": "Gujarat", "score": 84.9309158484528, "score_ntl": 98.00485204014645, "score_infra": 99.999999999, "score_housing": 39.89487516385861, "score_market": 84.99999999915, "ntl_2019": 2.1101205315766407, "ntl_2023": 4.758400021708551, "ntl_growth": 0.6159981805384109, "population": 8214.0, "pmay_density": 0.2628120893561104, "lat": 23.7471, "lon": 71.2797}, {"rank": 50, "label": "West Bengal / D-337 / V-323746", "state": "West Bengal", "score": 84.91546291208127, "score_ntl": 97.49771274062316, "score_infra": 99.999999999, "score_housing": 40.831889081047485, "score_market": 84.99999999915, "ntl_2019": 12.149956198696463, "ntl_2023": 23.22161595030057, "ntl_growth": 0.6108270278442589, "population": 2519.0, "pmay_density": 7.279029462738301, "lat": 24.4, "lon": 88.9373}, {"rank": 51, "label": "Assam / D-314 / V-296740", "state": "Assam", "score": 84.88343578474978, "score_ntl": 95.44639434109084, "score_infra": 74.99999999925, "score_housing": 79.0243902431122, "score_market": 80.99999999919, "ntl_2019": 0.0, "ntl_2023": 0.803826654828975, "ntl_growth": 0.5899103276826325, "population": 423.0, "pmay_density": 95.9349593495935, "lat": 24.735, "lon": 93.5998}, {"rank": 52, "label": "Kerala / D-593 / V-627669", "state": "Kerala", "score": 84.88230265137896, "score_ntl": 96.609086143227, "score_infra": 94.99999999905, "score_housing": 37.4433409723783, "score_market": 99.999999999, "ntl_2019": 0.4767156511869128, "ntl_2023": 1.695507307104185, "ntl_growth": 0.6017659595587992, "population": 17126.0, "pmay_density": 0.0, "lat": 11.3956, "lon": 76.382}, {"rank": 53, "label": "Uttar Pradesh / D-160 / V-146953", "state": "Uttar Pradesh", "score": 84.8713825969789, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.35691318288617, "score_market": 79.9999999992, "ntl_2019": 1.6789496467882898, "ntl_2023": 5.809569278078079, "ntl_growth": 0.6363421259798077, "population": 8600.0, "pmay_density": 3.215434083601286, "lat": 26.1472, "lon": 81.3691}, {"rank": 54, "label": "Kerala / D-600 / V-628381", "state": "Kerala", "score": 84.76853250667746, "score_ntl": 92.24571365242316, "score_infra": 99.999999999, "score_housing": 39.351235230540965, "score_market": 99.999999999, "ntl_2019": 0.5942480162967659, "ntl_2023": 1.7834079960367273, "ntl_growth": 0.5572739128319525, "population": 18176.0, "pmay_density": 0.0214822771213748, "lat": 9.6852, "lon": 76.0754}, {"rank": 55, "label": "Andhra Pradesh / D-544 / V-586096", "state": "Andhra Pradesh", "score": 84.73245948229813, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 53.6622976093323, "score_market": 84.99999999915, "ntl_2019": 1.40371497859051, "ntl_2023": 3.632977324672862, "ntl_growth": 0.6363421259798077, "population": 4386.0, "pmay_density": 28.064764841942942, "lat": 15.7741, "lon": 81.1014}, {"rank": 56, "label": "West Bengal / D-343 / V-333277", "state": "West Bengal", "score": 84.62916662699203, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 45.64583333287688, "score_market": 69.9999999993, "ntl_2019": 9.492031645898566, "ntl_2023": 20.27286619847991, "ntl_growth": 0.6363421259798077, "population": 4098.0, "pmay_density": 9.6875, "lat": 24.1144, "lon": 87.1452}, {"rank": 57, "label": "West Bengal / D-344 / V-342160", "state": "West Bengal", "score": 84.58005245376418, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 37.9002624668126, "score_market": 79.9999999992, "ntl_2019": 0.0634015565085244, "ntl_2023": 1.2251178398856213, "ntl_growth": 0.6363421259798077, "population": 1589.0, "pmay_density": 5.2493438320209975, "lat": 22.9886, "lon": 86.891}, {"rank": 58, "label": "Tamil Nadu / D-605 / V-630493", "state": "Tamil Nadu", "score": 84.55418138040783, "score_ntl": 97.16383773163776, "score_infra": 89.9999999991, "score_housing": 40.9432314406386, "score_market": 99.999999999, "ntl_2019": 4.507976142422836, "ntl_2023": 9.110958649053478, "ntl_growth": 0.6074226009859027, "population": 4264.0, "pmay_density": 1.7467248908296942, "lat": 12.365, "lon": 79.7685}, {"rank": 59, "label": "Kerala / D-595 / V-627968", "state": "Kerala", "score": 84.51053761462488, "score_ntl": 91.27634403776216, "score_infra": 99.999999999, "score_housing": 39.9999999996, "score_market": 99.999999999, "ntl_2019": 0.6129379365050106, "ntl_2023": 1.7883411600193997, "ntl_growth": 0.5473895313628068, "population": 15312.0, "pmay_density": 0.0, "lat": 10.2458, "lon": 76.6879}, {"rank": 60, "label": "Himachal Pradesh / D-33 / V-026570", "state": "Himachal Pradesh", "score": 84.49999996032666, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 39.9999999996, "score_market": 84.99999999915, "ntl_2019": 0.5883446475522336, "ntl_2023": 2.9019896837765886, "ntl_growth": 0.6363421259798077, "population": 2078.0, "pmay_density": 0.0, "lat": 31.4317, "lon": 76.1319}, {"rank": 61, "label": "Gujarat / D-490 / V-523054", "state": "Gujarat", "score": 84.47171736150823, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 41.10858700549531, "score_market": 99.999999999, "ntl_2019": 1.817776498283916, "ntl_2023": 4.728620471564692, "ntl_growth": 0.6363421259798077, "population": 5580.0, "pmay_density": 2.7260336210813265, "lat": 23.0462, "lon": 71.3105}, {"rank": 62, "label": "Kerala / D-594 / V-627897", "state": "Kerala", "score": 84.47031859847624, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 39.85159319034789, "score_market": 84.99999999915, "ntl_2019": 0.4243882367026416, "ntl_2023": 1.7605068297509434, "ntl_growth": 0.6363421259798077, "population": 8833.0, "pmay_density": 0.1309471846355303, "lat": 11.6864, "lon": 76.3622}, {"rank": 63, "label": "Maharashtra / D-531 / V-568813", "state": "Maharashtra", "score": 84.46390370364253, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 41.06951871616684, "score_market": 74.99999999925, "ntl_2019": 0.7626012157354649, "ntl_2023": 3.112516319019944, "ntl_growth": 0.6363421259798077, "population": 5141.0, "pmay_density": 5.347593582887701, "lat": 18.2532, "lon": 75.1864}, {"rank": 64, "label": "Kerala / D-597 / V-628184", "state": "Kerala", "score": 84.43492969500888, "score_ntl": 96.7191587300658, "score_infra": 99.999999999, "score_housing": 39.98633101680027, "score_market": 84.99999999915, "ntl_2019": 0.5933805823134558, "ntl_2023": 1.91172663167924, "ntl_growth": 0.6028883378767855, "population": 35176.0, "pmay_density": 0.0, "lat": 9.4089, "lon": 77.5584}, {"rank": 65, "label": "Uttar Pradesh / D-198 / V-210846", "state": "Uttar Pradesh", "score": 84.43471806121752, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 39.673590504054296, "score_market": 84.99999999915, "ntl_2019": 5.227031517938785, "ntl_2023": 12.329508911020902, "ntl_growth": 0.6363421259798077, "population": 3618.0, "pmay_density": 4.599406528189911, "lat": 27.9829, "lon": 81.9412}, {"rank": 66, "label": "Maharashtra / D-527 / V-564564", "state": "Maharashtra", "score": 84.42085013569738, "score_ntl": 99.297051539623, "score_infra": 99.999999999, "score_housing": 34.76014760112841, "score_market": 84.99999999915, "ntl_2019": 2.111908020360989, "ntl_2023": 4.83812926607017, "ntl_growth": 0.6291743649307104, "population": 6136.0, "pmay_density": 1.107011070110701, "lat": 19.174, "lon": 74.3877}, {"rank": 67, "label": "Kerala / D-593 / V-627668", "state": "Kerala", "score": 84.38956405213507, "score_ntl": 94.19949492682706, "score_infra": 94.99999999905, "score_housing": 39.798830408958736, "score_market": 99.999999999, "ntl_2019": 0.3325035957039197, "ntl_2023": 1.373238862103755, "ntl_growth": 0.5771960551514596, "population": 18712.0, "pmay_density": 0.3040935672514619, "lat": 11.9845, "lon": 77.6119}, {"rank": 68, "label": "Tamil Nadu / D-604 / V-629258", "state": "Tamil Nadu", "score": 84.37042460514819, "score_ntl": 99.55927747642544, "score_infra": 99.999999999, "score_housing": 41.48356807470254, "score_market": 74.99999999925, "ntl_2019": 10.145230668502922, "ntl_2023": 19.965115097583613, "ntl_growth": 0.6318482069320055, "population": 4012.0, "pmay_density": 2.535211267605634, "lat": 9.8841, "lon": 78.6149}, {"rank": 69, "label": "Kerala / D-598 / V-628286", "state": "Kerala", "score": 84.32496504075361, "score_ntl": 90.75491931063534, "score_infra": 99.999999999, "score_housing": 40.11498658449728, "score_market": 99.999999999, "ntl_2019": 0.687256960199828, "ntl_2023": 1.901351967665865, "ntl_growth": 0.5420727142969352, "population": 30394.0, "pmay_density": 0.2171968825859205, "lat": 9.5581, "lon": 77.0529}, {"rank": 70, "label": "Kerala / D-594 / V-627718", "state": "Kerala", "score": 84.25535113089768, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 40.02675585244253, "score_market": 99.999999999, "ntl_2019": 0.1064461679697623, "ntl_2023": 1.1929477177936854, "ntl_growth": 0.6363421259798077, "population": 7197.0, "pmay_density": 0.1337792642140468, "lat": 11.648, "lon": 75.1563}, {"rank": 71, "label": "Kerala / D-594 / V-627728", "state": "Kerala", "score": 84.24999996032916, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 39.99999999959999, "score_market": 99.999999999, "ntl_2019": 0.0, "ntl_2023": 0.9277899315245938, "ntl_growth": 0.6363421259798077, "population": 4236.0, "pmay_density": 0.2079002079002079, "lat": 10.7763, "lon": 76.4205}, {"rank": 72, "label": "Tamil Nadu / D-628 / V-642830", "state": "Tamil Nadu", "score": 84.2490108406457, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 39.99505440118264, "score_market": 99.999999999, "ntl_2019": 1.8754270939012367, "ntl_2023": 5.3421194579920055, "ntl_growth": 0.6363421259798077, "population": 9999.0, "pmay_density": 1.211671612265084, "lat": 10.4223, "lon": 79.7742}, {"rank": 73, "label": "Kerala / D-594 / V-627720", "state": "Kerala", "score": 84.20865629107894, "score_ntl": 99.99999990192914, "score_infra": 84.99999999915, "score_housing": 39.79328165334884, "score_market": 99.999999999, "ntl_2019": 0.0377358036464901, "ntl_2023": 0.9679546389795304, "ntl_growth": 0.6363421259798077, "population": 3276.0, "pmay_density": 0.0, "lat": 10.6199, "lon": 75.4065}, {"rank": 74, "label": "Kerala / D-600 / V-628414", "state": "Kerala", "score": 84.17074510921665, "score_ntl": 93.5621534868421, "score_infra": 94.99999999905, "score_housing": 39.979418574336506, "score_market": 99.999999999, "ntl_2019": 0.6629111747433091, "ntl_2023": 1.942522053754468, "ntl_growth": 0.5706972689056073, "population": 30099.0, "pmay_density": 0.1286339078981219, "lat": 10.9684, "lon": 76.9609}, {"rank": 75, "label": "Tamil Nadu / D-632 / V-644382", "state": "Tamil Nadu", "score": 84.16028036744247, "score_ntl": 99.62192048400269, "score_infra": 84.99999999915, "score_housing": 40.30756087101939, "score_market": 99.999999999, "ntl_2019": 1.6701970492406115, "ntl_2023": 4.026074341802142, "ntl_growth": 0.6324869595542281, "population": 4143.0, "pmay_density": 0.5126014523707817, "lat": 10.2306, "lon": 78.092}, {"rank": 76, "label": "Rajasthan / D-106 / V-075426", "state": "Rajasthan", "score": 84.08079974486651, "score_ntl": 94.81311047443128, "score_infra": 99.999999999, "score_housing": 45.77777777732, "score_market": 79.9999999992, "ntl_2019": 1.006390904341221, "ntl_2023": 2.595886141122223, "ntl_growth": 0.5834529153379016, "population": 7860.0, "pmay_density": 12.592592592592592, "lat": 28.5092, "lon": 74.6675}, {"rank": 77, "label": "Kerala / D-593 / V-627644", "state": "Kerala", "score": 84.06664176156781, "score_ntl": 90.33609593054156, "score_infra": 99.999999999, "score_housing": 39.66101694875593, "score_market": 99.999999999, "ntl_2019": 0.3827056617649962, "ntl_2023": 1.3675230868394792, "ntl_growth": 0.5378020934785884, "population": 16500.0, "pmay_density": 0.0, "lat": 10.6648, "lon": 76.3238}, {"rank": 78, "label": "Kerala / D-599 / V-628302", "state": "Kerala", "score": 84.05304588479959, "score_ntl": 90.1502234471308, "score_infra": 99.999999999, "score_housing": 39.96478253173629, "score_market": 99.999999999, "ntl_2019": 0.542852098332921, "ntl_2023": 1.636730021010143, "ntl_growth": 0.5359068055483062, "population": 20573.0, "pmay_density": 0.0, "lat": 9.7135, "lon": 75.4452}, {"rank": 79, "label": "Kerala / D-594 / V-627721", "state": "Kerala", "score": 83.99990966480262, "score_ntl": 99.44153620412304, "score_infra": 84.99999999915, "score_housing": 39.8664759175794, "score_market": 99.999999999, "ntl_2019": 0.0006826185547449, "ntl_2023": 0.8801094983030769, "ntl_growth": 0.6306476332473161, "population": 8944.0, "pmay_density": 0.0, "lat": 10.3648, "lon": 76.536}, {"rank": 80, "label": "Himachal Pradesh / D-30 / V-019792", "state": "Himachal Pradesh", "score": 83.99380320133349, "score_ntl": 96.72061911557746, "score_infra": 74.99999999925, "score_housing": 80.27777777697499, "score_market": 69.9999999993, "ntl_2019": 1.4319362539761855, "ntl_2023": 3.444160474092215, "ntl_growth": 0.6029032290052789, "population": 932.0, "pmay_density": 69.44444444444444, "lat": 30.2951, "lon": 76.3341}, {"rank": 81, "label": "Kerala / D-597 / V-628164", "state": "Kerala", "score": 83.9671133820148, "score_ntl": 93.05109600815908, "score_infra": 94.99999999905, "score_housing": 39.98337489569327, "score_market": 99.999999999, "ntl_2019": 0.8616617830936052, "ntl_2023": 2.277089511097492, "ntl_growth": 0.5654861636723063, "population": 33501.0, "pmay_density": 0.0118750742192138, "lat": 9.5635, "lon": 76.6644}, {"rank": 82, "label": "Bihar / D-232 / V-248256", "state": "Bihar", "score": 83.9271610781078, "score_ntl": 99.43483818024428, "score_infra": 89.9999999991, "score_housing": 44.5161290318129, "score_market": 84.99999999915, "ntl_2019": 2.450415636802408, "ntl_2023": 5.482291235924099, "ntl_growth": 0.6305793354359281, "population": 4545.0, "pmay_density": 14.516129032258066, "lat": 24.2829, "lon": 86.5294}, {"rank": 83, "label": "Kerala / D-592 / V-627500", "state": "Kerala", "score": 83.89974532489263, "score_ntl": 92.84201394016976, "score_infra": 94.99999999905, "score_housing": 40.06469874606114, "score_market": 99.999999999, "ntl_2019": 0.0, "ntl_2023": 0.7565544902858149, "ntl_growth": 0.5633542143238763, "population": 13040.0, "pmay_density": 0.3234937323089365, "lat": 11.9294, "lon": 74.9837}, {"rank": 84, "label": "Kerala / D-599 / V-628317", "state": "Kerala", "score": 83.81716015174823, "score_ntl": 89.97938246525675, "score_infra": 99.999999999, "score_housing": 39.127035830227626, "score_market": 99.999999999, "ntl_2019": 0.043921154499059, "ntl_2023": 0.7809532480817345, "ntl_growth": 0.5341647894897594, "population": 21797.0, "pmay_density": 0.0, "lat": 10.0645, "lon": 76.778}, {"rank": 85, "label": "Maharashtra / D-531 / V-568718", "state": "Maharashtra", "score": 83.75321332794339, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 33.766066837708614, "score_market": 79.9999999992, "ntl_2019": 0.7968358970895475, "ntl_2023": 2.7653920438629696, "ntl_growth": 0.6363421259798077, "population": 6892.0, "pmay_density": 0.3213367609254499, "lat": 18.8942, "lon": 74.6108}, {"rank": 86, "label": "Rajasthan / D-111 / V-082071", "state": "Rajasthan", "score": 83.6784313328839, "score_ntl": 99.99999990192914, "score_infra": 94.99999999905, "score_housing": 40.39215686234117, "score_market": 78.99999999921, "ntl_2019": 0.7970059967333922, "ntl_2023": 2.421390146102879, "ntl_growth": 0.6363421259798077, "population": 2910.0, "pmay_density": 0.6535947712418301, "lat": 28.3303, "lon": 74.431}, {"rank": 87, "label": "Gujarat / D-490 / V-522934", "state": "Gujarat", "score": 83.67355275685313, "score_ntl": 96.08104970692185, "score_infra": 94.99999999905, "score_housing": 43.70566437224691, "score_market": 84.99999999915, "ntl_2019": 2.6009375799680656, "ntl_2023": 5.5376382424578825, "ntl_growth": 0.5963817248075649, "population": 8833.0, "pmay_density": 8.258337744838538, "lat": 22.1767, "lon": 72.0463}, {"rank": 88, "label": "Madhya Pradesh / D-454 / V-492537", "state": "Madhya Pradesh", "score": 83.65789469717718, "score_ntl": 99.99999990192914, "score_infra": 74.99999999925, "score_housing": 68.28947368352762, "score_market": 74.99999999925, "ntl_2019": 0.8425784787458852, "ntl_2023": 2.527152691857657, "ntl_growth": 0.6363421259798077, "population": 1129.0, "pmay_density": 63.81578947368421, "lat": 23.8959, "lon": 77.7281}, {"rank": 89, "label": "Uttar Pradesh / D-180 / V-171295", "state": "Uttar Pradesh", "score": 83.59039996033576, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 32.95199999967048, "score_market": 79.9999999992, "ntl_2019": 2.028961114435325, "ntl_2023": 6.256841719654608, "ntl_growth": 0.6363421259798077, "population": 10853.0, "pmay_density": 3.72, "lat": 25.6375, "lon": 80.7394}, {"rank": 90, "label": "Kerala / D-588 / V-627136", "state": "Kerala", "score": 83.57625288807186, "score_ntl": 92.06563222134837, "score_infra": 94.99999999905, "score_housing": 39.9999999996, "score_market": 99.999999999, "ntl_2019": 1.0709235504271497, "ntl_2023": 2.609005833340871, "ntl_growth": 0.5554376745866725, "population": 16618.0, "pmay_density": 0.0, "lat": 10.6212, "lon": 76.1722}, {"rank": 91, "label": "Andhra Pradesh / D-544 / V-586055", "state": "Andhra Pradesh", "score": 83.50581391382497, "score_ntl": 99.99999990192914, "score_infra": 74.99999999925, "score_housing": 56.27906976687906, "score_market": 89.9999999991, "ntl_2019": 1.4598663847133926, "ntl_2023": 4.051229320133814, "ntl_growth": 0.6363421259798077, "population": 1580.0, "pmay_density": 32.093023255813954, "lat": 16.6001, "lon": 80.2601}, {"rank": 92, "label": "Kerala / D-597 / V-628201", "state": "Kerala", "score": 83.47006651504502, "score_ntl": 97.40692920665836, "score_infra": 94.99999999905, "score_housing": 40.036474163733374, "score_market": 84.99999999915, "ntl_2019": 0.0168973199383802, "ntl_2023": 0.8713451104862932, "ntl_growth": 0.6099013344170523, "population": 6447.0, "pmay_density": 0.060790273556231, "lat": 12.303, "lon": 75.0664}, {"rank": 93, "label": "Kerala / D-599 / V-628319", "state": "Kerala", "score": 83.46075061552995, "score_ntl": 88.65441912837979, "score_infra": 99.999999999, "score_housing": 39.994914822890166, "score_market": 99.999999999, "ntl_2019": 0.3283258367240608, "ntl_2023": 1.2357436491852216, "ntl_growth": 0.5206545217278549, "population": 13361.0, "pmay_density": 0.2288329519450801, "lat": 10.5584, "lon": 75.789}, {"rank": 94, "label": "Maharashtra / D-509 / V-541525", "state": "Maharashtra", "score": 83.43720543192673, "score_ntl": 86.97663427068815, "score_infra": 74.99999999925, "score_housing": 74.48275861994482, "score_market": 99.999999999, "ntl_2019": 0.5668128856467289, "ntl_2023": 1.5924157991551198, "ntl_growth": 0.5035466350087314, "population": 856.0, "pmay_density": 93.59605911330048, "lat": 20.8365, "lon": 74.9599}, {"rank": 95, "label": "Kerala / D-599 / V-628309", "state": "Kerala", "score": 83.43713189811331, "score_ntl": 91.72274133780756, "score_infra": 94.99999999905, "score_housing": 39.9901768168889, "score_market": 99.999999999, "ntl_2019": 0.0560625165318683, "ntl_2023": 0.8339804247641955, "ntl_growth": 0.5519413154642596, "population": 8101.0, "pmay_density": 0.0491159135559921, "lat": 9.9211, "lon": 76.1169}, {"rank": 96, "label": "Andhra Pradesh / D-554 / V-595864", "state": "Andhra Pradesh", "score": 83.38536581399634, "score_ntl": 99.99999990192914, "score_infra": 74.99999999925, "score_housing": 66.92682926762342, "score_market": 74.99999999925, "ntl_2019": 3.137073833853411, "ntl_2023": 7.846187923893422, "ntl_growth": 0.6363421259798077, "population": 856.0, "pmay_density": 44.87804878048781, "lat": 15.6785, "lon": 79.0756}, {"rank": 97, "label": "Rajasthan / D-101 / V-069835", "state": "Rajasthan", "score": 83.31575604406933, "score_ntl": 87.34821364079447, "score_infra": 99.999999999, "score_housing": 41.88235294075764, "score_market": 99.999999999, "ntl_2019": 1.243927337542588, "ntl_2023": 2.726849090088103, "ntl_growth": 0.5073355223275073, "population": 5594.0, "pmay_density": 32.51336898395722, "lat": 26.2732, "lon": 75.4877}, {"rank": 98, "label": "Kerala / D-588 / V-627102", "state": "Kerala", "score": 83.29769073207316, "score_ntl": 91.36568324524252, "score_infra": 94.99999999905, "score_housing": 40.00708717181821, "score_market": 99.999999999, "ntl_2019": 0.78168970855121, "ntl_2023": 2.082875255099892, "ntl_growth": 0.5483004974107737, "population": 14299.0, "pmay_density": 0.0354358610914245, "lat": 10.6799, "lon": 77.3551}, {"rank": 99, "label": "Kerala / D-599 / V-628345", "state": "Kerala", "score": 83.29276660172782, "score_ntl": 87.89782817030203, "score_infra": 99.999999999, "score_housing": 40.66817667003499, "score_market": 99.999999999, "ntl_2019": 0.470372094357586, "ntl_2023": 1.4558066382334929, "ntl_growth": 0.5129397826514064, "population": 24069.0, "pmay_density": 1.2646281615704038, "lat": 11.0015, "lon": 74.9229}, {"rank": 100, "label": "Uttar Pradesh / D-187 / V-184104", "state": "Uttar Pradesh", "score": 83.19999996033967, "score_ntl": 99.99999990192914, "score_infra": 99.999999999, "score_housing": 39.9999999996, "score_market": 67.99999999932, "ntl_2019": 1.4013179177745556, "ntl_2023": 4.03723350065712, "ntl_growth": 0.6363421259798077, "population": 3530.0, "pmay_density": 0.0, "lat": 28.3445, "lon": 81.9543}];
+
+// ── State filter ──────────────────────────────────────────────────────────────
+const states = [...new Set(DATA.map(d=>d.state))].sort();
+const sf = document.getElementById('stFilter');
+states.forEach(s=>{const o=document.createElement('option');o.value=s;o.textContent=s;sf.appendChild(o)});
+
+// ── Village list ──────────────────────────────────────────────────────────────
+let activeRank = 1;
+
+function filterVillages(){
+  const sv = sf.value;
+  renderList(sv ? DATA.filter(d=>d.state===sv) : DATA);
+}
+
+function renderList(data){
+  const el = document.getElementById('vlist');
+  el.innerHTML='';
+  data.forEach(v=>{
+    const div=document.createElement('div');
+    div.className='vi'+(v.rank===activeRank?' active':'');
+    div.dataset.rank=v.rank;
+    const rc=v.rank<=3?'rg':v.rank<=15?'rs':'rn';
+    const sc=v.rank<=3?'var(--amber)':v.rank<=15?'var(--accent)':'var(--blue)';
+    const shortLabel=v.label.split('/').slice(0,1)[0].trim()+' · '+v.label.split('/').pop().trim();
+    div.innerHTML=`
+      <div class="vi-rank ${rc}">${v.rank}</div>
+      <div class="vi-info">
+        <div class="vi-name">${shortLabel}</div>
+        <div class="vi-state">${v.state}</div>
+      </div>
+      <div class="vi-sc" style="color:${sc}">${v.score.toFixed(1)}</div>
+    `;
+    div.addEventListener('click',()=>selectV(v.rank));
+    el.appendChild(div);
+  });
+}
+
+function selectV(rank){
+  activeRank=rank;
+  document.querySelectorAll('.vi').forEach(el=>el.classList.toggle('active',+el.dataset.rank===rank));
+  const v=DATA.find(d=>d.rank===rank);
+  updateDetail(v);
+}
+
+function updateDetail(v){
+  document.getElementById('dLabel').textContent=v.label;
+  document.getElementById('dState').textContent=v.state+' · National Rank #'+v.rank;
+  document.getElementById('dScore').textContent=v.score.toFixed(1);
+
+  const bars=[
+    {id:'N',val:v.score_ntl},{id:'I',val:v.score_infra},
+    {id:'H',val:v.score_housing},{id:'M',val:v.score_market}
+  ];
+  bars.forEach(b=>{
+    document.getElementById('b'+b.id).style.width=b.val+'%';
+    document.getElementById('v'+b.id).textContent=b.val.toFixed(1);
+  });
+
+  document.getElementById('iN19').textContent=v.ntl_2019.toFixed(3);
+  document.getElementById('iN23').textContent=v.ntl_2023.toFixed(3);
+  document.getElementById('iNG').textContent='+'+v.ntl_growth.toFixed(3);
+  document.getElementById('iPop').textContent=v.population?v.population.toLocaleString():'N/A';
+  document.getElementById('iPmay').textContent=v.pmay_density?v.pmay_density.toFixed(1)+'%':'0%';
+  document.getElementById('iRank').textContent='#'+v.rank;
+}
+
+// ── State bar chart ───────────────────────────────────────────────────────────
+function buildStateChart(){
+  const counts={};
+  DATA.forEach(d=>counts[d.state]=(counts[d.state]||0)+1);
+  const sorted=Object.entries(counts).sort((a,b)=>b[1]-a[1]);
+  const COLS=['#00E5CC','#4B9FFF','#FFB547','#A78BFA','#FF6B6B','#34D399','#60A5FA','#F472B6','#FBBF24','#6EE7B7'];
+  new Chart(document.getElementById('stChart'),{
+    type:'bar',
+    data:{
+      labels:sorted.map(s=>s[0]),
+      datasets:[{data:sorted.map(s=>s[1]),backgroundColor:sorted.map((_,i)=>COLS[i%COLS.length]+'AA'),borderColor:sorted.map((_,i)=>COLS[i%COLS.length]),borderWidth:1,borderRadius:3}]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{color:'#6B7B99',font:{size:9},maxRotation:45},grid:{color:'#232D3F'}},
+              y:{ticks:{color:'#6B7B99',font:{size:10}},grid:{color:'#232D3F'},beginAtZero:true}}}
+  });
+}
+
+// ── NTL growth histogram ──────────────────────────────────────────────────────
+function buildNTLChart(){
+  const vals=DATA.map(d=>d.ntl_growth);
+  const bins=10;
+  const min=Math.min(...vals),max=Math.max(...vals);
+  const step=(max-min)/bins;
+  const counts=new Array(bins).fill(0);
+  vals.forEach(v=>{const i=Math.min(Math.floor((v-min)/step),bins-1);counts[i]++});
+  const labels=Array.from({length:bins},(_,i)=>(min+i*step).toFixed(2));
+  new Chart(document.getElementById('ntlChart'),{
+    type:'bar',
+    data:{labels,datasets:[{data:counts,backgroundColor:'rgba(0,229,204,.5)',borderColor:'#00E5CC',borderWidth:1,borderRadius:2,label:'Villages'}]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>` ${c.parsed.y} villages`}}},
+      scales:{x:{title:{display:true,text:'Log NTL Growth Ratio',color:'#6B7B99',font:{size:10}},ticks:{color:'#6B7B99',font:{size:9}},grid:{color:'#232D3F'}},
+              y:{ticks:{color:'#6B7B99',font:{size:10}},grid:{color:'#232D3F'},beginAtZero:true}}}
+  });
+}
+
+// ── Stacked bar top 20 ────────────────────────────────────────────────────────
+function buildStackChart(){
+  const top20=DATA.slice(0,20);
+  const labels=top20.map(d=>d.label.split('/').pop().trim());
+  const comps=[
+    {label:'NTL (40%)',key:'score_ntl',color:'#00E5CC',w:.40},
+    {label:'Infra (25%)',key:'score_infra',color:'#4B9FFF',w:.25},
+    {label:'Housing (20%)',key:'score_housing',color:'#A78BFA',w:.20},
+    {label:'Market (15%)',key:'score_market',color:'#FFB547',w:.15},
+  ];
+  new Chart(document.getElementById('stackChart'),{
+    type:'bar',
+    data:{labels,datasets:comps.map(c=>({label:c.label,data:top20.map(d=>(d[c.key]*c.w).toFixed(1)),backgroundColor:c.color+'99',borderColor:c.color,borderWidth:1}))},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6B7B99',font:{size:9},boxWidth:10,padding:6}}},
+      scales:{x:{stacked:true,ticks:{color:'#6B7B99',font:{size:8},maxRotation:45},grid:{color:'#232D3F'}},
+              y:{stacked:true,ticks:{color:'#6B7B99',font:{size:9}},grid:{color:'#232D3F'}}}}
+  });
+}
+
+// ── Scatter PMAY vs score ─────────────────────────────────────────────────────
+function buildScatChart(){
+  const stateList=[...new Set(DATA.map(d=>d.state))];
+  const COLS=['#00E5CC','#4B9FFF','#FFB547','#A78BFA','#FF6B6B','#34D399','#60A5FA','#F472B6','#FBBF24','#6EE7B7','#C084FC','#FB923C','#38BDF8','#F87171'];
+  const datasets=stateList.map((s,i)=>({
+    label:s,
+    data:DATA.filter(d=>d.state===s).map(d=>({x:d.pmay_density,y:d.score})),
+    backgroundColor:COLS[i%COLS.length]+'CC',pointRadius:5,pointHoverRadius:8,
+  }));
+  new Chart(document.getElementById('scatChart'),{
+    type:'scatter',data:{datasets},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{labels:{color:'#6B7B99',font:{size:9},boxWidth:10,padding:5}}},
+      scales:{
+        x:{title:{display:true,text:'PMAY Housing Density (%)',color:'#6B7B99',font:{size:10}},ticks:{color:'#6B7B99',font:{size:9}},grid:{color:'#232D3F'}},
+        y:{title:{display:true,text:'Growth Score',color:'#6B7B99',font:{size:10}},ticks:{color:'#6B7B99',font:{size:9}},grid:{color:'#232D3F'}}
+      }}
+  });
+}
+
+// ── SVG Map ───────────────────────────────────────────────────────────────────
+function buildMap(){
+  const g=document.getElementById('mdots');
+  const tt=document.getElementById('tt');
+  const svg=document.getElementById('gmap');
+  const vb=svg.viewBox.baseVal;
+
+  DATA.forEach(v=>{
+    const cx=((v.lon-60)/30*vb.width+vb.x).toFixed(3);
+    const cy=(((38-v.lat)/30)*vb.height+vb.y).toFixed(3);
+    const r=(2.5+(v.score-83)/9*2.5).toFixed(2);
+    const col=v.rank<=3?'#FFB547':v.rank<=15?'#00E5CC':'#4B9FFF';
+
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('cx',cx);c.setAttribute('cy',cy);
+    c.setAttribute('r',r);c.setAttribute('fill',col+'BB');
+    c.setAttribute('stroke',col);c.setAttribute('stroke-width','0.15');
+    c.setAttribute('class','map-dot');
+
+    c.addEventListener('mousemove',e=>{
+      tt.classList.add('show');
+      document.getElementById('ttn').textContent=`#${v.rank} ${v.label.split('/')[0].trim()}`;
+      document.getElementById('tts').textContent=v.state;
+      document.getElementById('ttsc').textContent=v.score.toFixed(2);
+      document.getElementById('ttg').textContent=v.ntl_growth.toFixed(3);
+      tt.style.left=(e.clientX+14)+'px';tt.style.top=(e.clientY-10)+'px';
+    });
+    c.addEventListener('mouseleave',()=>tt.classList.remove('show'));
+    c.addEventListener('click',()=>{
+      selectV(v.rank);
+      document.querySelector(`.vi[data-rank="${v.rank}"]`)?.scrollIntoView({behavior:'smooth',block:'nearest'});
+    });
+    g.appendChild(c);
+  });
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+renderList(DATA);
+updateDetail(DATA[0]);
+buildStateChart();
+buildNTLChart();
+buildStackChart();
+buildScatChart();
+buildMap();
+</script>
+</body>
+</html>
